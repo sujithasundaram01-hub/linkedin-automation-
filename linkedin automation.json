@@ -1,0 +1,206 @@
+{
+  "name": "linkedin automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -480,
+        -64
+      ],
+      "id": "bdf47669-7ee8-4cc2-9c09-45b410a8d361",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        -64
+      ],
+      "id": "9fbb2696-f28f-4664-9f09-883d6c455a97",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "maxItems": 2
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "e4cfe7ab-2412-4b3b-8125-e3569dc287e0",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.title + \"\\n\\n\" + $json.link + \"\\n\\n\" + ($json.contentSnippet || $json.content || \"\") }}",
+        "options": {
+          "systemMessage": "You are a professional LinkedIn content writer.\n\nCreate one engaging LinkedIn post based on the technology news provided by the user.\n\nRequirements:\n- Start with an interesting hook.\n- Explain the news in simple, professional English.\n- Include why it matters to technology professionals.\n- End with a thoughtful question.\n- Add 3 to 5 relevant hashtags.\n- Keep the post concise and readable.\n- Do not invent facts or statistics.\n- Do not include any text outside the LinkedIn post."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        -64
+      ],
+      "id": "9dbb4530-ce0e-47fd-82e2-472998cd5553",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        144
+      ],
+      "id": "93a6a70a-8d3b-4bf5-a115-2681015b2105",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Sre247h0ZbIG9ADa",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "B5EaGLIIsJ",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -64
+      ],
+      "id": "659241bc-b530-4bcd-99ec-c7ca8d24ba02",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "btlucppGD2x90u8Y",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "clearDeduplicationHistory",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -64
+      ],
+      "id": "297ec8ee-99e1-471c-b32b-50aa6360aa77",
+      "name": "Remove Duplicates"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "99871b78-2ac5-4c82-80b7-1c1ccdef800c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8cdaa76c4fb7a4f904f10ab908d6e9cd7340e25a55e1fd2f7180c2a5f0baca4f"
+  },
+  "nodeGroups": [],
+  "id": "8p4AJhZlbzgF9nAb",
+  "tags": []
+}
